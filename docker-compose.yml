@@ -1,0 +1,57 @@
+services:
+  # 1. The "Seed" / Lab Environment
+  victim:
+    image: tleemcjr/metasploitable2:latest
+    container_name: metasploitable_victim
+    # THE FIX: Run services, then hang forever so the container doesn't die
+    command: sh -c "/bin/services.sh && tail -f /dev/null"
+    networks:
+      - pentest_net
+
+  # 2. The Agent Backend (FastAPI + Nmap)
+  backend:
+    build: 
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: agent_backend
+    ports:
+      - "8000:8000" # Expose API to your host if you want to test via Postman
+    networks:
+      - pentest_net
+    depends_on:
+      - victim # Tells Docker: "Do not start the scanner until the victim is up"
+
+  # 3. The UI (Streamlit)
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    container_name: agent_frontend
+    ports:
+      - "8501:8501" # Streamlit's default port
+    networks:
+      - pentest_net
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15-alpine
+    container_name: agent_db
+    environment:
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: agentpassword
+      POSTGRES_DB: agent_brain
+    ports:
+      - "5432:5432"
+    networks:
+      - pentest_net
+    volumes:
+      - ./db_init:/docker-entrypoint-initdb.d
+      
+# The invisible router that connects them all safely
+networks:
+  pentest_net:
+    driver: bridge
+
+
+#docker-compose up --build -d
