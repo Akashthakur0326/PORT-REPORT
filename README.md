@@ -40,11 +40,6 @@ docker run --rm -it nicolaka/netshoot nmap -sV 172.17.0.3
 
 
 //REMEMBER 
--- the tools i will give the llm are to call the nvd api and the tool to hit DB and get attack pattern and a tool to access chroma DB and get text to send tollm on prevention measue a decide we can do is that decide bw TBD 
-
-The Strategy: LLM as the "Planner"
-You are moving into Agentic Workflow territory. Instead of hardcoding which exploit runs, the LLM will analyze the CVE description and pick the best "Tool" (Template) for the job.
-
 The Workflow:
 
         Input: CVE-2011-2523 (after resseracher.py) + "Backdoor in vsftpd 2.3.4..."
@@ -66,6 +61,9 @@ SO SET UP -- colab attck.py validator.py and a DB which is temporarliy at seed.p
 make a tool which searches the DB if not from the inspiartion hit DB and if cpe not there hit nvd and llm 
 then set up attck.py to attck the victim based on decided attack template and then validate the response using validate.py
 
+TOOL 1-- if the CPE/CVE is not in the DB we give the llm power to get the info on it by hitting NVD API and scoda API befor going for the TOOL 2 use 
+TOOL 2-- we need to make a predefined attack template like 6-7 template of pretested attacks with exploit scripts and payload tested and we give llm the power to chose any of them based on CPE/CVE type and execute it and get result 
+TOOL 3-- go through the chromDB which if the exploit successfull the LLM hits this DB and some API to get remedies on how to prevent this vulneriblity 
 
 
 port-report/

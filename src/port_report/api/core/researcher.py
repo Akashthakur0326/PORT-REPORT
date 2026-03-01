@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-NVD_API_KEY = os.getenv("NVD_API_KEY")
-SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
+NVD_API_KEY = os.getenv("NVD_API")
+SHODAN_API_KEY = os.getenv("SHODAN_API")
 
 class VulnerabilityResearcher:
     def __init__(self):
