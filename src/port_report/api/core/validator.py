@@ -26,8 +26,6 @@ def validate_evidence(validation_rule, result):
             expected = validation_rule.get("expected")
             return str(result).strip() == str(expected).strip()
         
-        if rule_type == "exact_match":
-            return str(result).strip() == str(validation_rule.get("expected")).strip()
         
     except Exception as e:
         print(f"[!] Validation Logic Error: {e}")

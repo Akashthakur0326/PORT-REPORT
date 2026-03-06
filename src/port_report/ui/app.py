@@ -1,26 +1,65 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="Agentic Pentester", layout="wide")
-st.title("Red Team Autonomous Agent")
+# Professional page config
+st.set_page_config(page_title="Agentic Pentester", page_icon="🛡️", layout="wide")
+st.title("🛡️ Autonomous Red Team Agent & CISO Dashboard")
+st.markdown("Automated Reconnaissance, Exploitation, and Mitigation Synthesis via LangGraph.")
+
+st.divider()
 
 # Input field
-target_ip = st.text_input("Enter Target IP (Leave blank for default sandbox):", value="")
+target_ip = st.text_input("Enter Target IP (Leave blank for 'victim' sandbox):", value="")
 
-if st.button("Initiate Reconnaissance"):
-    with st.spinner(f"Scanning {target_ip if target_ip else 'default sandbox'}... This takes ~1 minute."):
+if st.button("Initiate Agentic Audit", type="primary"):
+    target = target_ip if target_ip else "victim"
+    
+    # We use st.status to show the pipeline steps to the user while the blocking request runs
+    with st.status(f"Executing LangGraph Pipeline on {target}...", expanded=True) as status:
+        st.markdown("⏳ **Node 1 (Scanner):** Running secure Nmap reconnaissance...")
+        st.markdown("⏳ **Node 2 (Researcher):** Querying Vulners API for Threat Intel...")
+        st.markdown("⏳ **Node 3 (Attacker):** Executing deterministic exploits & querying ChromaDB...")
+        st.markdown("⏳ **Node 4 (CISO):** Llama-3.3-70B synthesizing final report...")
+        
         try:
-            # Send the IP to the FastAPI container
+            # ADDED TIMEOUT: Crucial for long-running agent workflows
             response = requests.post(
-                "http://backend:8000/api/v1/scan", 
-                json={"ip": target_ip}
+                "http://backend:8000/api/v1/audit", 
+                json={"ip": target},
+                timeout=120 # Give the agent 2 minutes to finish the whole graph
             )
             
             if response.status_code == 200:
-                st.success("Reconnaissance Complete!")
-                st.json(response.json()) # Beautifully renders the Nmap JSON
-            else:
-                st.error(f"Error: {response.json().get('detail')}")
+                status.update(label="Audit Complete!", state="complete", expanded=False)
+                data = response.json()
+                report = data.get("report", {})
                 
+                st.divider()
+                st.subheader(f"📊 Final CISO Report for `{target}`")
+                
+                # Parse and render the structured JSON from the LLM
+                # We requested 'Critical', 'High', 'Medium' in the CISO prompt
+                for severity, color in [("Critical", "🔴"), ("High", "🟠"), ("Medium", "🟡")]:
+                    if severity in report and isinstance(report[severity], list):
+                        st.markdown(f"### {color} {severity} Findings")
+                        for finding in report[severity]:
+                            with st.expander(f"{finding.get('vulnerability', 'Unknown Vulnerability')}"):
+                                st.markdown("**Evidence Found:**")
+                                st.code(finding.get('evidence_found', 'No evidence provided.'))
+                                st.markdown("**Mitigation Steps:**")
+                                st.info(finding.get('mitigation_steps', 'No mitigation provided.'))
+                
+                # Fallback: Just in case the LLM hallucinates a slightly different JSON structure
+                with st.expander("⚙️ View Raw CISO JSON (Debug)"):
+                    st.json(report)
+                    
+            else:
+                status.update(label="Audit Failed", state="error", expanded=True)
+                st.error(f"Backend Error: {response.text}")
+                
+        except requests.exceptions.ReadTimeout:
+            status.update(label="Timeout Execution", state="error")
+            st.error("[!] The agent took longer than 120 seconds. The LLM rate limits or Nmap scan might be hanging.")
         except requests.exceptions.ConnectionError:
-            st.error("Failed to connect to the Scanner Backend. Is the Docker container running?")
+            status.update(label="Connection Error", state="error")
+            st.error("[!] Failed to connect to the FastAPI backend. Is the 'agent_backend' container healthy?")

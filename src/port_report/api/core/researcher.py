@@ -16,7 +16,6 @@ NVD API → detailed vulnerability info
 
 Inputs : cpe
 Output : a list of vulnerability objects
-
 """
 class VulnerabilityResearcher:
     def __init__(self):

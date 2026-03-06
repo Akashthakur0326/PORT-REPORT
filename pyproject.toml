@@ -18,7 +18,9 @@ dependencies = [
     "pgvector>=0.2.0",
     "chromadb>=0.4.20",
     "sentence-transformers>=2.2.2",
-    "vulners>=1.6.0" 
+    "vulners>=1.6.0",
+    "langgraph",
+    "langchain-groq"
 ]
 
 [build-system]

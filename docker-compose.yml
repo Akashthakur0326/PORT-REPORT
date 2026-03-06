@@ -14,6 +14,8 @@ services:
       context: .
       dockerfile: backend.Dockerfile
     container_name: agent_backend
+    env_file:             
+      - .env
     networks:
       - pentest_net
     depends_on:
@@ -22,7 +24,7 @@ services:
       db:
         condition: service_healthy
       chroma:
-        condition: service_healthy # NEW: Wait for the vector DB
+        condition: service_started # <--- CHANGE THIS FROM service_healthy
     command: >
       sh -c "python scripts/seed_postgres.py && 
              python scripts/seed_chroma.py && 
@@ -46,16 +48,11 @@ services:
     image: chromadb/chroma:latest
     container_name: agent_chroma
     ports:
-      - "8001:8000" # Mapped to 8001 for Windows host access, 8000 internally
+      - "8001:8000"
     volumes:
-      - ./chroma_data:/chroma/chroma # Persistent storage for your embeddings
+      - ./chroma_data:/chroma/chroma
     networks:
       - pentest_net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   db:
     image: postgres:15-alpine

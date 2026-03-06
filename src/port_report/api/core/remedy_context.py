@@ -5,7 +5,19 @@ import vulners
 from dotenv import load_dotenv
 
 load_dotenv()
+"""
+Exploit Result (from attack engine)
+        │
+        ▼
+Vulners API (threat intelligence)
+        │
+        ▼
+ChromaDB (MITRE mitigation knowledge base)
+        │
+        ▼
+Final structured context for LLM
 
+"""
 class RemedyContextBuilder:
     def __init__(self, use_docker_network=True):
         """
@@ -44,6 +56,10 @@ class RemedyContextBuilder:
     def _get_vulners_intelligence(self, cve_id: str) -> dict:
         """
         Hits Vulners API using the specific search method for bulletins.
+        detailed threat intelligence about a CVE from Vulners.
+
+        Information retrieved includes: title || description || CVSS score || exploit availability || reference links
+
         """
         if not self.vulners_client:
             return {"error": "Vulners API client not initialized."}
@@ -81,8 +97,8 @@ class RemedyContextBuilder:
             results = self.collection.query(query_texts=[search_query], n_results=n_results)
             
             if results and 'documents' in results and len(results['documents']) > 0:
-                # TRUNCATE to 750 characters so the LLM doesn't get a wall of text
-                return [doc[:750] + "..." for doc in results['documents'][0]]
+                # TRUNCATE to 600 characters so the LLM doesn't get a wall of text
+                return [doc[:600] + "..." for doc in results['documents'][0]]
             return ["No relevant MITRE mitigations found."]
         except Exception as e:
             return [f"Vector DB Error: {str(e)}"]
