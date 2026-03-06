@@ -8,6 +8,16 @@ load_dotenv()
 NVD_API_KEY = os.getenv("NVD_API")
 SHODAN_API_KEY = os.getenv("SHODAN_API")
 
+"""
+CPE → Query vulnerability databases → Retrieve CVE details
+
+Shodan CVE database → fast CVE list
+NVD API → detailed vulnerability info
+
+Inputs : cpe
+Output : a list of vulnerability objects
+
+"""
 class VulnerabilityResearcher:
     def __init__(self):
         self.nvd_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"

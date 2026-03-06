@@ -7,6 +7,21 @@ import subprocess
 import xml.etree.ElementTree as ET
 import re # NEW: We use regex for deterministic validation
 
+
+"""
+This script implements a secure wrapper around Nmap scanning.
+
+Instead of allowing arbitrary shell commands, it:
+
+        Validates the target
+        Runs Nmap safely using subprocess
+        Parses the XML output
+        Extracts open ports and service details
+        Returns structured scan results
+
+input : "172.18.0.5","victim"
+output : Python dictionary describing the scan results with cpe
+"""
 def validate_target(target):
     """Deterministically validates if target is a clean IP or hostname."""
     # Only allow alphanumeric characters, dots, and hyphens. 

@@ -14,12 +14,19 @@ services:
       context: .
       dockerfile: backend.Dockerfile
     container_name: agent_backend
-    ports:
-      - "8000:8000" # Expose API to your host if you want to test via Postman
     networks:
       - pentest_net
     depends_on:
-      - victim # Tells Docker: "Do not start the scanner until the victim is up"
+      victim:
+        condition: service_started
+      db:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy # NEW: Wait for the vector DB
+    command: >
+      sh -c "python scripts/seed_postgres.py && 
+             python scripts/seed_chroma.py && 
+             uvicorn port_report.api.main:app --host 0.0.0.0 --port 8000"
 
   # 3. The UI (Streamlit)
   frontend:
@@ -34,6 +41,22 @@ services:
     depends_on:
       - backend
 
+  
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: agent_chroma
+    ports:
+      - "8001:8000" # Mapped to 8001 for Windows host access, 8000 internally
+    volumes:
+      - ./chroma_data:/chroma/chroma # Persistent storage for your embeddings
+    networks:
+      - pentest_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   db:
     image: postgres:15-alpine
     container_name: agent_db
@@ -47,7 +70,12 @@ services:
       - pentest_net
     volumes:
       - ./db_init:/docker-entrypoint-initdb.d
-      
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent -d agent_brain"]
+      interval: 5s
+      timeout: 5s
+      retries: 5  
+    
 # The invisible router that connects them all safely
 networks:
   pentest_net:

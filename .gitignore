@@ -1,11 +1,56 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# --- Databases & Persistent Storage ---
+# Never version the actual data files
+postgres_data/
+chroma_data/
 
-# Virtual environments
-.venv
-*.env
+# --- Local Secrets ---
+# Crucial: If you leak your Vulners key to GitHub, it will be stolen in minutes
+.env
+.env.local
+.venv/
+env/
+venv/
+
+# --- Python Artifacts ---
+# Prevents binary "ghost" files from cluttering your commits
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Tools & IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Temporary/Log Files ---
+*.log
+db_init/*.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Docker & System ---
+.docker/
+.DS_Store
+Thumbs.db
