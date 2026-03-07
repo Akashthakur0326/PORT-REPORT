@@ -62,21 +62,33 @@ def research_and_attack_node(state: AgentState):
         return {"vulnerabilities": [], "attack_reports": []}
 
     for port_info in ports:
-        cpe = port_info.get('cpe')
-        if not cpe: continue
+        raw_cpe = port_info.get('cpe')
+        if not raw_cpe: continue
         
-        # 1. Research CVEs
-        found_cves = researcher.fetch_cves(cpe)
+        # 🛡️ THE FIX: Convert Nmap's CPE 2.2 to modern CPE 2.3 BEFORE querying
+        cpe_2_3 = remedy_tool._convert_cpe_2_2_to_2_3(raw_cpe)
+        print(f"[*] Upgraded CPE format: {raw_cpe} -> {cpe_2_3}")
+        
+        # 1. Research CVEs using the correct format
+        found_cves = researcher.fetch_cves(cpe_2_3)
+        
+        # 🛡️ LOUD LOGGING: Don't fail silently. Tell us what happened!
+        if not found_cves:
+            print(f"[-] No CVEs found in databases for {cpe_2_3}")
+            continue
+            
+        print(f"[+] 🚨 FOUND {len(found_cves)} CVE(s) for {cpe_2_3}! Initiating Attack Sequence...")
         all_vulns.extend(found_cves)
         
         # 2. Attempt Attacks & Build Remedy Context for each CVE
         for cve in found_cves:
+            print(f"    -> [ATTACK] Triggering exploit template for {cve['id']}")
             attack_res = execute_attack_flow(cve['id'], state['target_ip'])
-            context = remedy_tool.build_llm_context(attack_res, raw_cpe=cpe)
+            context = remedy_tool.build_llm_context(attack_res, raw_cpe=cpe_2_3)
             all_reports.append(context)
             
     return {"vulnerabilities": all_vulns, "attack_reports": all_reports}
-
+    
 def route_after_research(state: AgentState):
     """Router: deciding to synthesize or end."""
     if not state.get("attack_reports") or len(state["attack_reports"]) == 0:
